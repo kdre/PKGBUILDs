@@ -1,0 +1,42 @@
+# Maintainer: Klaus Drechsler <drechsler {at} gmx {dot} net>
+
+pkgname=hyperion-kdre-git
+pkgver=r1117.e713292
+pkgrel=1
+pkgdesc="An opensource 'AmbiLight' implementation"
+arch=('any')
+url="https://github.com/hyperion-project/hyperion.ng"
+license=('MIT')
+depends=('libusb' 'python' 'icu')
+optdepends=('xorg-server: X11 grabbing')
+makedepends=('git' 'cmake' 'qt5-base' 'qt5-serialport' 'avahi' 'protobuf')
+provides=('hyperion')
+conflicts=('hyperion')
+backup=('etc/hyperion.config.json')
+source=("${pkgname}::git+https://github.com/kdre/hyperion#branch=feature-ft232h")
+sha512sums=('SKIP')
+
+pkgver() {
+  cd "${pkgname}"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+	cd "${srcdir}/${pkgname}"
+	git submodule init
+	git submodule update
+	mkdir -p build
+	cd build
+	cmake -DCMAKE_INSTALL_PREFIX="${pkgdir}/usr" -DPLATFORM=x86 -DCMAKE_BUILD_TYPE=Release \
+				-DUSE_SHARED_AVAHI_LIBS=ON -DENABLE_FT232H=ON ..
+	make -j $(nproc)
+}
+
+package() {
+	cd "${srcdir}/${pkgname}/build"
+	make install
+
+	install -Dm 644 "${srcdir}/${pkgname}/config/hyperion.config.json.example" "${pkgdir}/etc/hyperion/hyperion.config.json"
+	install -Dm 644 "${srcdir}/${pkgname}/bin/service/hyperion.systemd.sh" "${pkgdir}/usr/lib/systemd/system/hyperiond.service"
+	#rm -rf "${pkgdir}/usr/share/hyperion/service"
+}

@@ -1,0 +1,60 @@
+# Maintainer: Klaus Drechsler <drechsler {at} gmx {dot} net>
+
+pkgname=libmpsse-kdre-git
+pkgver=r22.8a725e5
+pkgrel=1
+epoch=
+pkgdesc="Open source library for SPI/I2C control via FTDI chips"
+arch=('i686' 'x86_64')
+url="http://code.google.com/p/libmpsse/"
+license=('GPL2')
+groups=()
+depends=('libftdi')
+makedepends=('git' 'cmake' 'autoconf')
+checkdepends=()
+optdepends=()
+provides=('libmpsse')
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+noextract=()
+source=("${pkgname}::git+https://github.com/kdre/libmpsse.git")
+md5sums=('SKIP')
+
+#this is not needed anymore
+#"https://raw.githubusercontent.com/zegervdv/homebrew-ftdi/master/patch-src_configure_ac.patch")
+#md5sums=('SKIP' "445622b02dacf3ced0052a8d91916991")
+
+pkgver() {
+  cd "${pkgname}"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+prepare() {
+  cd "$srcdir/${pkgname}"
+  #patch -p0 -i "$srcdir/patch-src_configure_ac.patch"
+  cd "$srcdir/${pkgname}/src"
+  autoconf
+}
+
+build() {
+  cd "$srcdir/${pkgname}/src"
+  #sh configure --disable-python
+  sh configure --libdir=/usr/lib --includedir=/usr/include
+  make all
+}
+
+check() {
+  cd "$srcdir/${pkgname}"
+  #make -k check
+}
+
+package() {
+  cd "$srcdir/${pkgname}/src"
+  make DESTDIR="$pkgdir/" install
+}
+
+# EOF
